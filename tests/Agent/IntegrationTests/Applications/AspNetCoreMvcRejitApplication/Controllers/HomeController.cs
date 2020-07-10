@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using AspNetCoreMvcRejitApplication.Models;
 
 namespace AspNetCoreMvcRejitApplication.Controllers
 {
@@ -19,7 +18,7 @@ namespace AspNetCoreMvcRejitApplication.Controllers
     /// </summary>
     public class HomeController : Controller
     {
-        public ActionResult Index()
+        public IActionResult Index()
         {
             return Content("It am working", "text/plain");
         }

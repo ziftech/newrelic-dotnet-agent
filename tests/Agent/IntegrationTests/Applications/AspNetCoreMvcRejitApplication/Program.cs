@@ -6,12 +6,16 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using Microsoft.AspNetCore;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AspNetCoreMvcRejitApplication
 {
@@ -39,7 +43,7 @@ namespace AspNetCoreMvcRejitApplication
             Console.WriteLine($"[{_applicationName}] Received port: {argPort} | Using port: {_port}");
 
             var ct = new CancellationTokenSource();
-            var task = BuildWebHost(args).RunAsync(ct.Token);
+            var task = CreateHostBuilder(args).Build().RunAsync(ct.Token);
 
             var eventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, "app_server_wait_for_all_request_done_" + _port);
             CreatePidFile();
@@ -49,12 +53,6 @@ namespace AspNetCoreMvcRejitApplication
 
             task.GetAwaiter().GetResult();
         }
-
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
-                .UseUrls($@"http://localhost:{_port}/")
-                .Build();
 
         private static void CreatePidFile()
         {
@@ -69,5 +67,13 @@ namespace AspNetCoreMvcRejitApplication
                 file.WriteLine(pid);
             }
         }
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder
+                        .UseStartup<Startup>()
+                        .UseUrls($@"http://localhost:{_port}/");
+                });
     }
 }
