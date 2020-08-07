@@ -3,32 +3,71 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 using System;
+using System.Threading;
 using NewRelic.Agent.Core.Attributes;
+using NewRelic.Collections;
 
 namespace NewRelic.Agent.Core.Segments
 {
     //This is the Infinite Tracing (gRPC) implementation of attribute value
-    public partial class AttributeValue : IAttributeValue
+    public partial class AttributeValue : IAttributeValue, IDisposable
     {
-        private readonly AttributeDefinition _attributeDefinition;
+        private static readonly ObjectPool<AttributeValue> _objectPool = new ObjectPool<AttributeValue>(100, () => new AttributeValue());
+
+        private int _refCount = 0;
+
+        public void AddReference()
+        {
+            Interlocked.Increment(ref _refCount);
+        }
+
+        public void RemoveReference()
+        {
+            var count = Interlocked.Decrement(ref _refCount);
+            if (count <= 0)
+            {
+                Dispose();
+            }
+        }
+
+        public static AttributeValue Create(AttributeDefinition attributeDefinition)
+        {
+            var newItem = _objectPool.Take();
+
+            newItem._attributeDefinition = attributeDefinition;
+
+            return newItem;
+        }
+
+        public static AttributeValue Create(IAttributeValue fromAttribValue)
+        {
+            var newAttribValue = Create(fromAttribValue.AttributeDefinition);
+
+            if (fromAttribValue.Value != null)
+            {
+                newAttribValue.SetValue(fromAttribValue.Value);
+            }
+            else if (fromAttribValue.LazyValue != null)
+            {
+                newAttribValue.SetValue(fromAttribValue.LazyValue);
+            }
+
+            return newAttribValue;
+        }
+
+        public void Dispose()
+        {
+            ClearValue();
+            _attributeDefinition = null;
+            _refCount = 0;
+            IsImmutable = false;
+            _lazyValue = null;
+
+            _objectPool.Return(this);
+        }
+       
+        private AttributeDefinition _attributeDefinition;
         public AttributeDefinition AttributeDefinition => _attributeDefinition;
-
-        public AttributeValue(AttributeDefinition attributeDefinition)
-        {
-            _attributeDefinition = attributeDefinition;
-        }
-
-        public AttributeValue(IAttributeValue attribValue) : this(attribValue.AttributeDefinition)
-        {
-            if (attribValue.Value != null)
-            {
-                SetValue(attribValue.Value);
-            }
-            else if (attribValue.LazyValue != null)
-            {
-                SetValue(attribValue.LazyValue);
-            }
-        }
 
         public bool IsImmutable { get; private set; }
 

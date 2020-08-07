@@ -162,6 +162,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
             if (_spanEvents == null || !_spanEvents.TryAdd(wireModel.Span))
             {
+                wireModel.Dispose();
                 RecordDroppedSpans(1);
             }
         }
@@ -174,6 +175,11 @@ namespace NewRelic.Agent.Core.Aggregators
 
                 _agentHealthReporter.ReportInfiniteTracingSpanEventsSeen(countSpans);
                 RecordDroppedSpans(countSpans);
+
+                foreach(var wireModel in wireModels)
+                {
+                    wireModel.Dispose();
+                }
 
                 return;
             }

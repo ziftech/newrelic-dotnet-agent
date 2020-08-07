@@ -87,7 +87,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
 
     public interface IDataStreamingService<TRequest, TRequestBatch, TResponse> : IDisposable
-        where TRequest : IStreamingModel
+        where TRequest : IStreamingModel, IDisposable
     {
         bool IsServiceAvailable { get; }
         bool IsServiceEnabled { get; }
@@ -106,7 +106,7 @@ namespace NewRelic.Agent.Core.DataTransport
     }
 
     public abstract class DataStreamingService<TRequest, TRequestBatch, TResponse> : IDataStreamingService<TRequest, TRequestBatch, TResponse>
-        where TRequest : class, IStreamingModel
+        where TRequest : class, IStreamingModel, IDisposable
         where TRequestBatch : class, IStreamingBatchModel<TRequest>
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
@@ -742,6 +742,7 @@ namespace NewRelic.Agent.Core.DataTransport
                 if (!collection.TryAdd(item))
                 {
                     _agentHealthReporter.ReportInfiniteTracingSpanEventsDropped(1);
+                    item.Dispose();
                 }
             }
         }
@@ -778,7 +779,14 @@ namespace NewRelic.Agent.Core.DataTransport
                     }
 
                     var trySendStatus = TrySend(consumerId, requestStream, items, serviceCancellationToken);
-                    if (trySendStatus != TrySendStatus.Success)
+                    if (trySendStatus == TrySendStatus.Success)
+                    {
+                        foreach(var item in items)
+                        {
+                            item.Dispose();
+                        }
+                    }
+                    else
                     {
                         ProcessFailedItems(items, collection);
 

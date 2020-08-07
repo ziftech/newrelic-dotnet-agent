@@ -11,24 +11,62 @@ using Newtonsoft.Json;
 using NewRelic.Agent.Core.JsonConverters;
 using NewRelic.Collections;
 using NewRelic.Agent.Core.DataTransport;
-using NewRelic.Agent.Core.WireModels;
 
 namespace NewRelic.Agent.Core.Segments
 {
-    public partial class Span : IStreamingModel
+    public partial class Span : IStreamingModel, IDisposable
     {
+        private static ObjectPool<Span> _objectPool = new ObjectPool<Span>(100, () => new Span());
+
+        public static Span Create()
+        {
+            return _objectPool.Take();
+        }
+
         public string SpanId { get; set; }
 
         public string DisplayName => $"{TraceId}.{SpanId}";
+
+        public void Dispose()
+        {
+            ClearAttributeValues(AgentAttributes);
+            ClearAttributeValues(UserAttributes);
+            ClearAttributeValues(Intrinsics);
+
+            SpanId = default;
+            TraceId = string.Empty;
+
+            _objectPool.Return(this);
+        }
+
+        private void ClearAttributeValues(MapField<string,AttributeValue> attribValues)
+        {
+            foreach(var attribVal in attribValues.Values)
+            {
+                attribVal.RemoveReference();
+            }
+
+            attribValues.Clear();
+        }
     }
 
     public partial class SpanBatch : IStreamingBatchModel<Span>
     {
         public int Count => (Spans?.Count).GetValueOrDefault(0);
+
+        public void OnSuccessfulSend()
+        {
+            foreach(var span in Spans)
+            {
+                span.Dispose();
+            }
+
+            Spans.Clear();
+        }
     }
 
     [JsonConverter(typeof(SpanEventWireModelSerializer))]
-    public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority
+    public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority, IDisposable
     {
         Span Span { get; }
     }
@@ -45,12 +83,17 @@ namespace NewRelic.Agent.Core.Segments
             { AttributeClassification.UserAttributes, new object() }
         };
 
-        private readonly Span _span;
+        private Span _span;
         public Span Span => _span;
+
+        public void Dispose()
+        {
+            _span?.Dispose();
+        }
 
         public SpanAttributeValueCollection() : base(AttributeDestinations.SpanEvent)
         {
-            _span = new Span();
+            _span = Span.Create();
         }
 
         protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
@@ -62,14 +105,14 @@ namespace NewRelic.Agent.Core.Segments
         {
             var attribVal = value is AttributeValue
                         ? (AttributeValue)value
-                        : new AttributeValue(value);
+                        : AttributeValue.Create(value);
 
             return SetValueInternal(attribVal);
         }
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
         {
-            var attribVal = new AttributeValue(attribDef);
+            var attribVal = AttributeValue.Create(attribDef);
             attribVal.Value = value;
 
             return SetValueInternal(attribVal);
@@ -77,7 +120,7 @@ namespace NewRelic.Agent.Core.Segments
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
         {
-            var attribVal = new AttributeValue(attribDef);
+            var attribVal = AttributeValue.Create(attribDef);
             attribVal.LazyValue = lazyValue;
 
             return SetValueInternal(attribVal);
@@ -87,12 +130,11 @@ namespace NewRelic.Agent.Core.Segments
         {
             foreach (var lockObjKVP in _lockObjects)
             {
-                var keysToRemoveForClassification = itemsToRemove
+                var itemsToRemoveForClassification = itemsToRemove
                     .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
-                    .Select(x => x.AttributeDefinition.Name)
                     .ToArray();
 
-                if (keysToRemoveForClassification.Length == 0)
+                if (itemsToRemoveForClassification.Length == 0)
                 {
                     continue;
                 }
@@ -101,9 +143,10 @@ namespace NewRelic.Agent.Core.Segments
 
                 lock (lockObjKVP.Value)
                 {
-                    foreach (var keyToRemove in keysToRemoveForClassification)
+                    foreach (var itemToRemove in itemsToRemoveForClassification)
                     {
-                        dicForClassification.Remove(keyToRemove);
+                        dicForClassification.Remove(itemToRemove.AttributeDefinition.Name);
+                        itemToRemove.RemoveReference();
                     }
                 }
             }
@@ -135,9 +178,24 @@ namespace NewRelic.Agent.Core.Segments
 
             lock (lockObj)
             {
-                var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
+                var existingAttribValue = default(AttributeValue);
+                var hasItem = dic.TryGetValue(attribVal.AttributeDefinition.Name, out existingAttribValue);
+
+                //If trying to set the same object ref
+                if (hasItem)
+                {
+                    if (existingAttribValue == attribVal)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        existingAttribValue.RemoveReference();
+                    }
+                }
 
                 dic[attribVal.AttributeDefinition.Name] = attribVal;
+                attribVal.AddReference();
 
                 return !hasItem;
             }

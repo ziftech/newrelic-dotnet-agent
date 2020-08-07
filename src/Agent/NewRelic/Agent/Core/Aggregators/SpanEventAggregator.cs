@@ -52,9 +52,22 @@ namespace NewRelic.Agent.Core.Aggregators
 
         private int AddWireModels(IEnumerable<ISpanEventWireModel> wireModels)
         {
-            var nodes = wireModels.Where(model => null != model)
-                .Select(model => new PrioritizedNode<ISpanEventWireModel>(model));
-            return _spanEvents.Add(nodes);
+            var countAdded = 0;
+            foreach (var wireModel in wireModels)
+            {
+                var node = new PrioritizedNode<ISpanEventWireModel>(wireModel);
+
+                if(!_spanEvents.Add(node))
+                {
+                    wireModel.Dispose();
+                }
+                else
+                {
+                    countAdded++;
+                }
+            }
+
+            return countAdded;
         }
 
         public SpanEventAggregator(IDataTransportService dataTransportService, IScheduler scheduler, IProcessStatic processStatic, IAgentHealthReporter agentHealthReporter)
@@ -69,6 +82,17 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             base.Dispose();
             _readerWriterLockSlim.Dispose();
+
+            if(_spanEvents == null)
+            {
+                return;
+            }
+
+            foreach(var wireModel in _spanEvents)
+            {
+                wireModel.Data.Dispose();
+            }
+
         }
 
         public override void Collect(ISpanEventWireModel wireModel)
@@ -146,19 +170,34 @@ namespace NewRelic.Agent.Core.Aggregators
             {
                 case DataTransportResponseStatus.RequestSuccessful:
                     _agentHealthReporter.ReportSpanEventsSent(spanEvents.Count);
+                    DisposeSpans(spanEvents);
                     break;
+
                 case DataTransportResponseStatus.Retain:
                     RetainEvents(spanEvents);
                     break;
+
                 case DataTransportResponseStatus.ReduceSizeIfPossibleOtherwiseDiscard:
                     ReduceReservoirSize((int)(spanEvents.Count * ReservoirReductionSizeMultiplier));
                     RetainEvents(spanEvents);
                     break;
+
                 case DataTransportResponseStatus.Discard:
                 default:
+                    DisposeSpans(spanEvents);
                     break;
             }
         }
+
+        private void DisposeSpans(IEnumerable<ISpanEventWireModel> spans)
+        {
+            foreach(var span in spans)
+            {
+                span.Dispose();
+            }
+
+        }
+
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
         {
             if (configurationUpdateSource == ConfigurationUpdateSource.Local && _configuration.SpanEventsMaxSamplesStored != _spanEvents.Size)

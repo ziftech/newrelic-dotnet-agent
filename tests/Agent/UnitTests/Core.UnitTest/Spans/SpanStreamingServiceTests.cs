@@ -161,7 +161,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
 
         protected override Span GetRequestModel()
         {
-            return new Span();
+            return Span.Create();
         }
 
         protected override IEnumerable<Span> GetBatchItems(SpanBatch batch)
@@ -178,7 +178,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
     [TestFixture]
     internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
         where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
-        where TRequest : class, IStreamingModel
+        where TRequest : class, IStreamingModel, IDisposable
         where TRequestBatch: class, IStreamingBatchModel<TRequest>
         where TResponse : class
     {
