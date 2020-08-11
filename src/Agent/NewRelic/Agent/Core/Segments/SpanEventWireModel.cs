@@ -14,7 +14,7 @@ using NewRelic.Agent.Core.DataTransport;
 
 namespace NewRelic.Agent.Core.Segments
 {
-    public partial class Span : IStreamingModel, IDisposable
+    public partial class Span : IStreamingModel, IPoolableObject
     {
         private static ObjectPool<Span> _objectPool = new ObjectPool<Span>(100, () => new Span());
 
@@ -23,9 +23,12 @@ namespace NewRelic.Agent.Core.Segments
             return _objectPool.Take();
         }
 
-        public string SpanId { get; set; }
+        public bool IsInPool { get; set; }
 
-        public string DisplayName => $"{TraceId}.{SpanId}";
+        //public string SpanId { get; set; }
+
+        //public string DisplayName => $"{TraceId}.{SpanId}";
+        public string DisplayName => $"{TraceId}";
 
         public void Dispose()
         {
@@ -33,7 +36,7 @@ namespace NewRelic.Agent.Core.Segments
             ClearAttributeValues(UserAttributes);
             ClearAttributeValues(Intrinsics);
 
-            SpanId = default;
+            //SpanId = default;
             TraceId = string.Empty;
 
             _objectPool.Return(this);
@@ -50,18 +53,37 @@ namespace NewRelic.Agent.Core.Segments
         }
     }
 
-    public partial class SpanBatch : IStreamingBatchModel<Span>
+    public partial class SpanBatch : IStreamingBatchModel<Span>, IPoolableObject
     {
+        private static ObjectPool<SpanBatch> _objectPool = new ObjectPool<SpanBatch>(100, () => new SpanBatch());
+
+        public bool IsInPool { get; set; }
+
+        public static SpanBatch Create()
+        {
+            return _objectPool.Take();
+        }
+
         public int Count => (Spans?.Count).GetValueOrDefault(0);
 
-        public void OnSuccessfulSend()
+        public void Dispose()
         {
-            foreach(var span in Spans)
+            Dispose(true);
+        }
+
+        public void Dispose(bool disposeBatchItems)
+        {
+            if (disposeBatchItems)
             {
-                span.Dispose();
+                foreach (var span in Spans)
+                {
+                    span.Dispose();
+                }
             }
 
             Spans.Clear();
+
+            _objectPool.Return(this);
         }
     }
 
@@ -73,6 +95,17 @@ namespace NewRelic.Agent.Core.Segments
 
     public class SpanAttributeValueCollection : AttributeValueCollectionBase<AttributeValue>, ISpanEventWireModel
     {
+
+        /*
+         * SpanIsErrorExpected  true
+         * SpanCategory         Generic, DataStore, 
+         * NrEntryPoint         true
+         * type                 span
+         * sampled              true/false-
+         * DataSToreVendorName  
+         * SpanKind
+         */
+
         public float Priority { get; set; }
 
         //Since the Map Field may not be concurrrent, we need to lock the objects when performing operations around them
@@ -103,24 +136,35 @@ namespace NewRelic.Agent.Core.Segments
 
         protected override bool SetValueImpl(IAttributeValue value)
         {
-            var attribVal = value is AttributeValue
-                        ? (AttributeValue)value
-                        : AttributeValue.Create(value);
+            var attribVal = value as AttributeValue;
+            if(attribVal != null)
+            {
+                return SetValueInternal(attribVal);
+            }
+
+            attribVal = AttribValFactory(value.AttributeDefinition);
+            attribVal.Value = value;
 
             return SetValueInternal(attribVal);
         }
 
+        protected override AttributeValue AttribValFactory(AttributeDefinition attribDef)
+        {
+            return AttributeValue.Create(attribDef);
+        }
+
         protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
         {
-            var attribVal = AttributeValue.Create(attribDef);
-            attribVal.Value = value;
+            var attribVal = attribDef.ValuesAreCached
+                ? this.GetOrAddCachedValue(attribDef, value)
+                : AttribValFactory(attribDef, value);
 
             return SetValueInternal(attribVal);
         }
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
         {
-            var attribVal = AttributeValue.Create(attribDef);
+            var attribVal = AttribValFactory(attribDef);
             attribVal.LazyValue = lazyValue;
 
             return SetValueInternal(attribVal);
@@ -162,9 +206,9 @@ namespace NewRelic.Agent.Core.Segments
                     Span.TraceId = attribVal.StringValue;
                     break;
 
-                case AttributeDefinition.KeyName_Guid:
-                    Span.SpanId = attribVal.StringValue;
-                    break;
+                //case AttributeDefinition.KeyName_Guid:
+                //    Span.SpanId = attribVal.StringValue;
+                //    break;
             }
 
             var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification);

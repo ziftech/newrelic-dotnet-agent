@@ -55,7 +55,6 @@ namespace NewRelic.Agent.Core.Spans
             
             _attribDefs.TransactionNameForSpan.TrySetValue(spanAttributes, transactionName);
 
-
             spanAttributes.Priority = immutableTransaction.Priority;
 
             spanAttributes.AddRange(immutableTransaction.CommonSpanAttributes);

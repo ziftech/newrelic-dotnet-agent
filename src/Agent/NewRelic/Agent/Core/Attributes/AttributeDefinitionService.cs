@@ -230,6 +230,7 @@ namespace NewRelic.Agent.Core.Attributes
 
                 return AttributeDefinitionBuilder.CreateString<TypeAttributeValue>("type", AttributeClassification.Intrinsics)
                     .AppliesTo(dest)
+                    .WithCachedValues()
                     .WithDefaultOutputValue(val)
                     .WithConvert((target) => val)
                     .Build(_attribFilter);
@@ -404,6 +405,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<SpanCategory, string> SpanCategory => _spanCategory ?? (_spanCategory =
             AttributeDefinitionBuilder.CreateString<SpanCategory>("category", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .WithConvert(v => EnumNameCache<SpanCategory>.GetNameToLower(v))
                 .Build(_attribFilter));
 
@@ -411,6 +413,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<bool, bool> NrEntryPoint => _nrEntryPoint ?? (_nrEntryPoint =
             AttributeDefinitionBuilder.CreateBool("nr.entryPoint", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _component;
@@ -423,6 +426,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> SpanKind => _spanKind ?? (_spanKind =
             AttributeDefinitionBuilder.CreateString("span.kind", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .WithDefaultOutputValue("client")
                 .Build(_attribFilter));
 
@@ -485,6 +489,7 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<string, string> HttpMethod => _httpMethod ?? (_httpMethod =
             AttributeDefinitionBuilder.CreateString("http.method", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _errorEventSpanId;
@@ -509,18 +514,21 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinition<bool, bool> IsError => _isError ?? (_isError =
             AttributeDefinitionBuilder.CreateBool("error", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.TransactionEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<bool, bool> _isErrorExpected;
         public AttributeDefinition<bool, bool> IsErrorExpected => _isErrorExpected ?? (_isErrorExpected =
             AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.Intrinsics)
                 .AppliesTo(AttributeDestinations.ErrorTrace, AttributeDestinations.ErrorEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<bool, bool> _spanIsErrorExpected;
         public AttributeDefinition<bool, bool> SpanIsErrorExpected => _spanIsErrorExpected ?? (_spanIsErrorExpected =
             AttributeDefinitionBuilder.CreateBool("error.expected", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<DateTime, long> _timestamp;
@@ -698,6 +706,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.ErrorTrace)
                 .AppliesTo(AttributeDestinations.TransactionTrace)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .WithConvert(v => EnumNameCache<TypeAttributeValue>.GetName(v))
                 .Build(_attribFilter));
 
@@ -716,6 +725,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .WithConvert(v => EnumNameCache<TypeAttributeValue>.GetName(v))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<TypeAttributeValue, string> _parentTypeForSpan;
@@ -723,6 +733,7 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString<TypeAttributeValue>("parent.type", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .WithConvert(v => EnumNameCache<TypeAttributeValue>.GetName(v))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<DistributedTracingParentType, string> _parentTypeForDistributedTracing;
@@ -734,6 +745,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .WithConvert(v => EnumNameCache<DistributedTracingParentType>.GetName(v))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<DistributedTracingParentType, string> _parentTypeForDistributedTracingForSpan;
@@ -741,6 +753,7 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString<DistributedTracingParentType>("parent.type", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .WithConvert(v => EnumNameCache<DistributedTracingParentType>.GetName(v))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _parentAccount;
@@ -784,6 +797,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .WithConvert((transportType) => EnumNameCache<TransportType>.GetName(transportType))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<TransportType, string> _parentTransportTypeForSpan;
@@ -791,6 +805,7 @@ namespace NewRelic.Agent.Core.Attributes
             AttributeDefinitionBuilder.CreateString<TransportType>("parent.transportType", AttributeClassification.AgentAttributes)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .WithConvert((transportType) => EnumNameCache<TransportType>.GetName(transportType))
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<TimeSpan, double> _parentTransportDuration;
@@ -881,6 +896,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
                 .AppliesTo(AttributeDestinations.SpanEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _hostDisplayName;
@@ -891,6 +907,7 @@ namespace NewRelic.Agent.Core.Attributes
                 .AppliesTo(AttributeDestinations.TransactionEvent)
                 .AppliesTo(AttributeDestinations.SpanEvent)
                 .AppliesTo(AttributeDestinations.ErrorEvent)
+                .WithCachedValues()
                 .Build(_attribFilter));
 
         private AttributeDefinition<string, string> _customEventType;

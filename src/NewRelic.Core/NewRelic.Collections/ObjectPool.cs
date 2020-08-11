@@ -4,14 +4,20 @@
 */
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Collections
 {
-    public class ObjectPool<T> where T : IDisposable
+    public interface IPoolableObject : IDisposable
     {
-        private readonly System.Collections.Concurrent.ConcurrentBag<T> _pool = new System.Collections.Concurrent.ConcurrentBag<T>();
+        bool IsInPool { get; set; }
+    }
+    
+    public class ObjectPool<T> where T : IPoolableObject
+    {
+        private readonly Queue<T> _pool;
         private readonly Func<T> _factory;
         private long _capacity;
 
@@ -20,11 +26,14 @@ namespace NewRelic.Collections
         private long _returns;
         private long _overflow;
 
+        private readonly object _syncObj = new object();
+
         private readonly Timer _updateTimer;
         private readonly string _typeName;
 
         public ObjectPool(int initialCapacity, Func<T> factory)
         {
+            _pool = new Queue<T>(initialCapacity);
             _typeName = typeof(T).FullName;
             _factory = factory;
             _capacity = initialCapacity;
@@ -39,14 +48,15 @@ namespace NewRelic.Collections
                 return 0;
             }
 
-            var countToRemove = (_pool.Count - _capacity);
+            var i = default(int);
 
-            int i = 0;
-            for (i = 0; i < countToRemove; i++)
+            lock (_syncObj)
             {
-                if (!_pool.TryTake(out _))
+                var countToRemove = (_pool.Count - _capacity);
+                
+                for (i = 0; i < countToRemove && _pool.Count > 0; i++)
                 {
-                    break;
+                    _pool.Dequeue();
                 }
             }
 
@@ -73,9 +83,18 @@ namespace NewRelic.Collections
         {
             Interlocked.Increment(ref _takes);
 
-            if (_pool.TryTake(out var result))
+            lock (_syncObj)
             {
-                return result;
+                while (_pool.Count > 0)
+                {
+                    var result = _pool.Dequeue();
+
+                    if (result.IsInPool)
+                    {
+                        result.IsInPool = false;
+                        return result;
+                    }
+                }
             }
 
             Interlocked.Increment(ref _misses);
@@ -85,12 +104,22 @@ namespace NewRelic.Collections
 
         public bool Return(T item)
         {
+            // The item should not already be in the pool
+            if(item.IsInPool)
+            {
+                return false;
+            }
+
             Interlocked.Increment(ref _returns);
 
-            if (_pool.Count < _capacity)
+            lock (_syncObj)
             {
-                _pool.Add(item);
-                return true;
+                if (_pool.Count < _capacity)
+                {
+                    item.IsInPool = true;
+                    _pool.Enqueue(item);
+                    return true;
+                }
             }
 
             Interlocked.Increment(ref _overflow);

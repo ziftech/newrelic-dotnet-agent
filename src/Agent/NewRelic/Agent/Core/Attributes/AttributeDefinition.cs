@@ -181,6 +181,7 @@ namespace NewRelic.Agent.Core.Attributes
         private readonly AttributeClassification _classification;
         private TOutput _defaultOutputVal;
         private TInput _defaultInputVal;
+        private bool _valuesAreCached;
         private Dictionary<AttributeDestinations, bool> _availability = new Dictionary<AttributeDestinations, bool>();
         private Func<TInput, TOutput> _conversionImpl;
         private Func<TOutput, TOutput> _postProcessingImpl = (o) => o;
@@ -202,6 +203,12 @@ namespace NewRelic.Agent.Core.Attributes
         public AttributeDefinitionBuilder<TInput, TOutput> WithDefaultInputValue(TInput defaultInputVal)
         {
             _defaultInputVal = defaultInputVal;
+            return this;
+        }
+
+        public AttributeDefinitionBuilder<TInput, TOutput> WithCachedValues()
+        {
+            _valuesAreCached = true;
             return this;
         }
 
@@ -274,7 +281,7 @@ namespace NewRelic.Agent.Core.Attributes
                 UpdateDestinationsFlags();
             }
 
-            var result = new AttributeDefinition<TInput, TOutput>(_name, _classification, _availability, _conversionImpl, _defaultOutputVal, _postProcessingImpl);
+            var result = new AttributeDefinition<TInput, TOutput>(_name, _classification, _availability, _conversionImpl, _defaultOutputVal, _postProcessingImpl, _valuesAreCached);
 
             return result;
         }
@@ -292,12 +299,14 @@ namespace NewRelic.Agent.Core.Attributes
         public readonly AttributeClassification Classification;
         public readonly AttributeDestinations AttributeDestinations;
         protected readonly Dictionary<AttributeDestinations, bool> _availability;
+        public readonly bool ValuesAreCached;
 
-        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability)
+        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability, bool valuesAreCached)
         {
             Name = name;
             Classification = classification;
             _availability = availability;
+            ValuesAreCached = valuesAreCached;
 
             foreach (var k in availability.Where(x=>x.Value))
             {
@@ -357,8 +366,8 @@ namespace NewRelic.Agent.Core.Attributes
 
     public class AttributeDefinition<TInput, TOutput> : AttributeDefinition
     {
-        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability, Func<TInput, TOutput> conversionImpl, TOutput defaultOutputVal, Func<TOutput, TOutput> postProcessingImpl)
-            : base(name, classification, availability)
+        public AttributeDefinition(string name, AttributeClassification classification, Dictionary<AttributeDestinations, bool> availability, Func<TInput, TOutput> conversionImpl, TOutput defaultOutputVal, Func<TOutput, TOutput> postProcessingImpl, bool valuesAreCached)
+            : base(name, classification, availability, valuesAreCached)
         {
             _conversionImpl = conversionImpl;
             _defaultOutput = defaultOutputVal;

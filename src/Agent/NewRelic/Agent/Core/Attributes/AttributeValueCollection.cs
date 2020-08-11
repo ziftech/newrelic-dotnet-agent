@@ -41,7 +41,6 @@ namespace NewRelic.Agent.Core.Attributes
 
     public abstract class AttributeValueCollectionBase<TAttrib> : IAttributeValueCollection where TAttrib : IAttributeValue
     {
-
         private static AttributeDestinations[] _allTargetModelTypes;
 
         public static AttributeDestinations[] AllTargetModelTypes  => _allTargetModelTypes
@@ -103,6 +102,16 @@ namespace NewRelic.Agent.Core.Attributes
             : this(targetModelTypes)
         {
             AddRange(fromCollection);
+        }
+
+        private static readonly ConcurrentDictionary<AttributeDefinition, ConcurrentDictionary<object, TAttrib>>
+            _attribValueCache = new ConcurrentDictionary<AttributeDefinition, ConcurrentDictionary<object, TAttrib>>();
+
+        protected TAttrib GetOrAddCachedValue(AttributeDefinition attribDef, object val)
+        {
+            var dic = _attribValueCache.GetOrAdd(attribDef, (x) => new ConcurrentDictionary<object, TAttrib>());
+
+            return dic.GetOrAdd(val, (v) => AttribValFactory(attribDef, v));
         }
 
         protected AttributeValueCollectionBase(params AttributeDestinations[] targetModelTypes)
@@ -221,6 +230,15 @@ namespace NewRelic.Agent.Core.Attributes
             return true;
         }
 
+        protected abstract TAttrib AttribValFactory(AttributeDefinition attribDef);
+
+        protected TAttrib AttribValFactory(AttributeDefinition attribDef, object val)
+        {
+            var attribVal = AttribValFactory(attribDef);
+            attribVal.Value = val;
+
+            return attribVal;
+        }
 
         protected abstract bool SetValueImpl(IAttributeValue attribVal);
 
@@ -350,6 +368,11 @@ namespace NewRelic.Agent.Core.Attributes
             return false;
         }
 
+        protected override AttributeValue AttribValFactory(AttributeDefinition attribDef)
+        {
+            return new AttributeValue(attribDef);
+        }
+
         protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
         {
             if (IsImmutable)
@@ -357,7 +380,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef);
+            var attribVal = AttribValFactory(attribDef);
             attribVal.Value = value;
 
             return SetValueImplInternal(attribVal);
@@ -370,7 +393,7 @@ namespace NewRelic.Agent.Core.Attributes
                 return false;
             }
 
-            var attribVal = new AttributeValue(attribDef);
+            var attribVal = AttribValFactory(attribDef);
             attribVal.LazyValue = lazyValue;
 
             return SetValueImplInternal(attribVal);

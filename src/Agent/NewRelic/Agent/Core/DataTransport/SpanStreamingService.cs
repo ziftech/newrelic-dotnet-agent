@@ -59,7 +59,7 @@ namespace NewRelic.Agent.Core.DataTransport
 
         protected override SpanBatch CreateBatch(IList<Span> items)
         {
-            var batch = new SpanBatch();
+            var batch = SpanBatch.Create();
             batch.Spans.AddRange(items);
             return batch;
         }

@@ -10,11 +10,13 @@ using NewRelic.Collections;
 namespace NewRelic.Agent.Core.Segments
 {
     //This is the Infinite Tracing (gRPC) implementation of attribute value
-    public partial class AttributeValue : IAttributeValue, IDisposable
+    public partial class AttributeValue : IAttributeValue, IPoolableObject
     {
         private static readonly ObjectPool<AttributeValue> _objectPool = new ObjectPool<AttributeValue>(100, () => new AttributeValue());
 
         private int _refCount = 0;
+
+        public bool IsInPool { get; set; }
 
         public void AddReference()
         {
@@ -57,6 +59,11 @@ namespace NewRelic.Agent.Core.Segments
 
         public void Dispose()
         {
+            if(_attributeDefinition.ValuesAreCached)
+            {
+                return;
+            }
+
             ClearValue();
             _attributeDefinition = null;
             _refCount = 0;
