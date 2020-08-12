@@ -204,7 +204,7 @@ namespace NewRelic.Agent.Core.Segments
             return _databaseService.GetObfuscatedSql(CommandText, DatastoreVendorName);
         }
 
-        public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+        public override void SetSpanTypeSpecificAttributes(AttributeValueCollection attribVals)
         {
             AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Datastore);
             AttribDefs.Component.TrySetValue(attribVals, EnumNameCache<DatastoreVendor>.GetName(DatastoreVendorName));

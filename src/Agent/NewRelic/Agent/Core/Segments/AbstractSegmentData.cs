@@ -40,7 +40,7 @@ namespace NewRelic.Agent.Core.Segments
         public abstract string GetTransactionTraceName();
         public abstract void AddMetricStats(Segment segment, TimeSpan durationOfChildren, TransactionMetricStatsCollection txStats, IConfigurationService configService);
 
-        public virtual void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+        public virtual void SetSpanTypeSpecificAttributes(AttributeValueCollection attribVals)
         {
             AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Generic);
         }

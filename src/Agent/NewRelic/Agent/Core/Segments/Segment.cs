@@ -35,7 +35,7 @@ namespace NewRelic.Agent.Core.Segments
         public IAttributeDefinitions AttribDefs => _transactionSegmentState.AttribDefs;
         public string TypeName => MethodCallData.TypeName;
 
-        private SpanAttributeValueCollection _customAttribValues;
+        private SpanEventWireModel _customAttribValues;
 
         public Segment(ITransactionSegmentState transactionSegmentState, MethodCallData methodCallData)
         {
@@ -220,9 +220,9 @@ namespace NewRelic.Agent.Core.Segments
             _parameters = Data.Finish() ?? EmptyImmutableParameters;
         }
 
-        public SpanAttributeValueCollection GetAttributeValues()
+        public SpanEventWireModel GetAttributeValues()
         {
-            var attribValues = _customAttribValues ?? new SpanAttributeValueCollection();
+            var attribValues = _customAttribValues ?? new SpanEventWireModel();
 
             AttribDefs.Duration.TrySetValue(attribValues, DurationOrZero);
             AttribDefs.NameForSpan.TrySetValue(attribValues, GetTransactionTraceName());
@@ -318,10 +318,10 @@ namespace NewRelic.Agent.Core.Segments
 
         public ISpan AddCustomAttribute(string key, object value)
         {
-            SpanAttributeValueCollection customAttribValues;
+            ISpanEventWireModel customAttribValues;
             lock (_customAttribValuesSyncRoot)
             {
-                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanAttributeValueCollection());
+                customAttribValues = _customAttribValues ?? (_customAttribValues = new SpanEventWireModel());
             }
 
             AttribDefs.GetCustomAttributeForSpan(key).TrySetValue(customAttribValues, value);

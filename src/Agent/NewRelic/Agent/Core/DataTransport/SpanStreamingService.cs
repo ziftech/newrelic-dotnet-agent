@@ -3,15 +3,17 @@
 * SPDX-License-Identifier: Apache-2.0
 */
 using System.Collections.Generic;
+using System.Linq;
 using NewRelic.Agent.Configuration;
 using NewRelic.Agent.Core.AgentHealth;
+using NewRelic.Agent.Core.Attributes;
 using NewRelic.Agent.Core.Segments;
 using NewRelic.Agent.Core.Utilities;
 using NewRelic.Core.Logging;
 
 namespace NewRelic.Agent.Core.DataTransport
 {
-    public class SpanStreamingService : DataStreamingService<Span, SpanBatch, RecordStatus>
+    public class SpanStreamingService : DataStreamingService<ISpanEventWireModel, SpanBatch, RecordStatus>
     {
         public SpanStreamingService(IGrpcWrapper<SpanBatch, RecordStatus> grpcWrapper, IDelayer delayer, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IAgentTimerService agentTimerService)
             : base(grpcWrapper, delayer, configSvc, agentHealthReporter, agentTimerService)
@@ -58,10 +60,12 @@ namespace NewRelic.Agent.Core.DataTransport
             _agentHealthReporter.ReportInfiniteTracingSpanGrpcTimeout();
         }
 
-        protected override SpanBatch CreateBatch(IList<Span> items)
+        protected override SpanBatch CreateBatch(IList<ISpanEventWireModel> items)
         {
             var batch = new SpanBatch();
-            batch.Spans.AddRange(items);
+
+            batch.Spans.AddRange(items.Select(x => new Span(x)));
+
             return batch;
         }
     }

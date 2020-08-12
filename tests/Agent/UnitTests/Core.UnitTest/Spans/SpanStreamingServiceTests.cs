@@ -126,7 +126,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         }
     }
 
-    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, Span, SpanBatch, RecordStatus>
+    internal class SpanStreamingServiceTests : DataStreamingServiceTests<SpanStreamingService, ISpanEventWireModel, Span, SpanBatch, RecordStatus>
     {
         public SpanStreamingServiceTests() : base("Span")
         {
@@ -159,9 +159,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
             return new SpanStreamingService(grpcWrapper, delayer, configSvc, agentHealthReporter, _agentTimerService);
         }
 
-        protected override Span GetRequestModel()
+        protected override ISpanEventWireModel GetRequestModel()
         {
-            return new Span();
+            return new SpanEventWireModel();
         }
 
         protected override IEnumerable<Span> GetBatchItems(SpanBatch batch)
@@ -176,10 +176,9 @@ namespace NewRelic.Agent.Core.Spans.Tests
     }
 
     [TestFixture]
-    internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatch, TResponse>
+    internal abstract class DataStreamingServiceTests<TService, TRequest, TRequestBatchItem, TRequestBatch, TResponse>
         where TService : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
-        where TRequestBatch: class, IStreamingBatchModel<TRequest>
         where TResponse : class
     {
         protected const string _validHost = "infiniteTracing.net";
@@ -191,7 +190,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         protected abstract TService GetService(IDelayer delayer, IGrpcWrapper<TRequestBatch, TResponse> grpcWrapper, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter);
         protected abstract TRequest GetRequestModel();
         protected abstract TResponse GetResponseModel(ulong messagesSeen);
-        protected abstract IEnumerable<TRequest> GetBatchItems(TRequestBatch batch);
+        protected abstract IEnumerable<TRequestBatchItem> GetBatchItems(TRequestBatch batch);
 
         protected float? TestFlakyValue;
         protected int? TestDelayValue;
@@ -481,7 +480,7 @@ namespace NewRelic.Agent.Core.Spans.Tests
         {
             _streamingSvc = GetService(_delayer, _grpcWrapper, _configSvc, _agentHealthReporter);
 
-            var actualAttempts = new List<TRequest>();
+            var actualAttempts = new List<TRequestBatchItem>();
             var haveProcessedFailure = false;
 
             var item1 = GetRequestModel();

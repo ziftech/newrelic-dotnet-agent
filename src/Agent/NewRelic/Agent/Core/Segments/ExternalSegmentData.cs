@@ -86,7 +86,7 @@ namespace NewRelic.Agent.Core.Segments
         }
 
 
-        public override void SetSpanTypeSpecificAttributes(SpanAttributeValueCollection attribVals)
+        public override void SetSpanTypeSpecificAttributes(AttributeValueCollection attribVals)
         {
             AttribDefs.SpanCategory.TrySetValue(attribVals, SpanCategory.Http);
             AttribDefs.HttpUrl.TrySetValue(attribVals, Uri);

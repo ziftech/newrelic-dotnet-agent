@@ -16,8 +16,8 @@ namespace NewRelic.Agent.Core.Segments
         private static ISegmentData _noOpSegmentDataImpl;
         private ISegmentData _noOpSegmentData => _noOpSegmentDataImpl ?? (_noOpSegmentDataImpl = new SimpleSegmentData("NoOpSegment"));
 
-        private static SpanAttributeValueCollection _attribValCollectionImpl;
-        private SpanAttributeValueCollection _attribValCollection => _attribValCollectionImpl ?? (_attribValCollectionImpl = new SpanAttributeValueCollection());
+        private static SpanEventWireModel _attribValCollectionImpl;
+        private SpanEventWireModel _attribValCollection => _attribValCollectionImpl ?? (_attribValCollectionImpl = new SpanEventWireModel());
 
         private readonly IAttributeDefinitions _attribDefs = new AttributeDefinitions(new AttributeFilter(new AttributeFilter.Settings()));
 
@@ -31,7 +31,7 @@ namespace NewRelic.Agent.Core.Segments
 
         public IAttributeDefinitions AttribDefs => _attribDefs;
 
-        public SpanAttributeValueCollection AttribValues => _attribValCollection;
+        public SpanEventWireModel AttribValues => _attribValCollection;
 
         public string TypeName => string.Empty;
 

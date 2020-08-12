@@ -56,14 +56,14 @@ namespace NewRelic.Agent.Core.Transactions
             _attribDefs = attribDefs;
         }
 
-        private SpanAttributeValueCollection _commonSpanAttributes;
-        public SpanAttributeValueCollection CommonSpanAttributes
+        private SpanEventWireModel _commonSpanAttributes;
+        public SpanEventWireModel CommonSpanAttributes
         {
             get
             {
                 if (_commonSpanAttributes == null)
                 {
-                    _commonSpanAttributes = new SpanAttributeValueCollection();
+                    _commonSpanAttributes = new SpanEventWireModel();
 
                     _attribDefs.GetTypeAttribute(TypeAttributeValue.Span).TrySetDefault(_commonSpanAttributes);
                     _attribDefs.DistributedTraceId.TrySetValue(_commonSpanAttributes, TraceId);

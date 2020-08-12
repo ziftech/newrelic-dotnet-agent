@@ -107,7 +107,6 @@ namespace NewRelic.Agent.Core.DataTransport
 
     public abstract class DataStreamingService<TRequest, TRequestBatch, TResponse> : IDataStreamingService<TRequest, TRequestBatch, TResponse>
         where TRequest : class, IStreamingModel
-        where TRequestBatch : class, IStreamingBatchModel<TRequest>
     {
         private const string UnimplementedStatus = "UNIMPLEMENTED";
         private const string UnavailableStatus = "UNAVAILABLE";

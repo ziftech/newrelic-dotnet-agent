@@ -47,9 +47,9 @@ namespace NewRelic.Agent.Core.Spans
         /// <summary>
         /// Creates a single root span, much like we do for Transaction Traces, since DT requires that there be only one parent-less span per txn (or at least the UI/Backend is expecting that). 
         /// </summary>
-        private SpanAttributeValueCollection GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
+        private SpanEventWireModel GenerateRootSpan(string rootSpanId, ImmutableTransaction immutableTransaction, string transactionName, IAttributeValueCollection transactionAttribValues)
         {
-            var spanAttributes = new SpanAttributeValueCollection();
+            var spanAttributes = new SpanEventWireModel();
 
             spanAttributes.AddRange(transactionAttribValues.GetAttributeValues(AttributeClassification.AgentAttributes));
             
@@ -93,7 +93,7 @@ namespace NewRelic.Agent.Core.Spans
             return spanAttributes;
         }
 
-        private SpanAttributeValueCollection GetAttributeValues(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
+        private SpanEventWireModel GetAttributeValues(Segment segment, ImmutableTransaction immutableTransaction, string rootSpanId)
         {
             var attribValues = segment.GetAttributeValues();
 

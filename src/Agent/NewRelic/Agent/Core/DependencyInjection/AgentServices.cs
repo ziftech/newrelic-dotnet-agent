@@ -127,7 +127,7 @@ namespace NewRelic.Agent.Core.DependencyInjection
             container.Register<ISpanEventAggregatorInfiniteTracing, SpanEventAggregatorInfiniteTracing>();
             container.Register<IGrpcWrapper<SpanBatch, RecordStatus>, SpanBatchGrpcWrapper>();
             container.Register<IDelayer, Delayer>();
-            container.Register<IDataStreamingService<Span, SpanBatch, RecordStatus>, SpanStreamingService>();
+            container.Register<IDataStreamingService<ISpanEventWireModel, SpanBatch, RecordStatus>, SpanStreamingService>();
             container.Register<ISpanEventMaker, SpanEventMaker>();
             container.Register<IMetricBuilder, MetricWireModel.MetricBuilder>();
             container.Register<IAgentHealthReporter, IOutOfBandMetricSource, AgentHealthReporter>();

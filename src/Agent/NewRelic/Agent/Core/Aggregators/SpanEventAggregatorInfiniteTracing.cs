@@ -33,8 +33,8 @@ namespace NewRelic.Agent.Core.Aggregators
 
     public class SpanEventAggregatorInfiniteTracing : DisposableService, ISpanEventAggregatorInfiniteTracing
     {
-        private PartitionedBlockingCollection<Span> _spanEvents;
-        private readonly IDataStreamingService<Span, SpanBatch, RecordStatus> _spanStreamingService;
+        private PartitionedBlockingCollection<ISpanEventWireModel> _spanEvents;
+        private readonly IDataStreamingService<ISpanEventWireModel, SpanBatch, RecordStatus> _spanStreamingService;
         private readonly IAgentHealthReporter _agentHealthReporter;
         private readonly IConfigurationService _configSvc;
         private readonly IScheduler _schedulerSvc;
@@ -43,7 +43,7 @@ namespace NewRelic.Agent.Core.Aggregators
 
         public int Capacity => (_spanEvents?.Capacity).GetValueOrDefault(0);
 
-        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<Span, SpanBatch, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IScheduler scheduler)
+        public SpanEventAggregatorInfiniteTracing(IDataStreamingService<ISpanEventWireModel, SpanBatch, RecordStatus> spanStreamingService, IConfigurationService configSvc, IAgentHealthReporter agentHealthReporter, IScheduler scheduler)
         {   
             _spanStreamingService = spanStreamingService;
             _subscriptions.Add<AgentConnectedEvent>(AgentConnected);
@@ -103,8 +103,8 @@ namespace NewRelic.Agent.Core.Aggregators
                 }
 
                 _spanEvents = oldCollection != null
-                    ? new PartitionedBlockingCollection<Span>(newCapacity, newPartitionCount, oldCollection)
-                    : new PartitionedBlockingCollection<Span>(newCapacity, newPartitionCount);
+                    ? new PartitionedBlockingCollection<ISpanEventWireModel>(newCapacity, newPartitionCount, oldCollection)
+                    : new PartitionedBlockingCollection<ISpanEventWireModel>(newCapacity, newPartitionCount);
             }
 
             LogConfiguration();
@@ -160,7 +160,7 @@ namespace NewRelic.Agent.Core.Aggregators
         {
             RecordSeenSpans(1);
 
-            if (_spanEvents == null || !_spanEvents.TryAdd(wireModel.Span))
+            if (_spanEvents == null || !_spanEvents.TryAdd(wireModel))
             {
                 RecordDroppedSpans(1);
             }

@@ -17,6 +17,21 @@ namespace NewRelic.Agent.Core.Segments
 {
     public partial class Span : IStreamingModel
     {
+        public Span(ISpanEventWireModel wireModel) : this()
+        {
+            SetAttribValuesForClassification(wireModel.GetAttributeValues(AttributeClassification.Intrinsics), Intrinsics);
+            SetAttribValuesForClassification(wireModel.GetAttributeValues(AttributeClassification.AgentAttributes), AgentAttributes);
+            SetAttribValuesForClassification(wireModel.GetAttributeValues(AttributeClassification.UserAttributes), UserAttributes);
+        }
+
+        private void SetAttribValuesForClassification(IEnumerable<IAttributeValue> attribValues, MapField<string,AttributeValue> mapField)
+        {
+            foreach(var attribVal in attribValues)
+            {
+                mapField[attribVal.AttributeDefinition.Name] = new AttributeValue(attribVal);
+            }
+        }
+
         public string SpanId { get; set; }
 
         public string DisplayName => $"{TraceId}.{SpanId}";
@@ -27,135 +42,191 @@ namespace NewRelic.Agent.Core.Segments
         public int Count => (Spans?.Count).GetValueOrDefault(0);
     }
 
-    [JsonConverter(typeof(SpanEventWireModelSerializer))]
-    public interface ISpanEventWireModel : IAttributeValueCollection, IHasPriority
+    //[JsonConverter(typeof(SpanEventWireModelSerializer))]
+    public interface ISpanEventWireModel : IHasPriority, IStreamingModel, IAttributeValueCollection
     {
-        Span Span { get; }
     }
 
-    public class SpanAttributeValueCollection : AttributeValueCollectionBase<AttributeValue>, ISpanEventWireModel
+    public class SpanEventWireModel : AttributeValueCollection, ISpanEventWireModel
     {
         public float Priority { get; set; }
 
-        //Since the Map Field may not be concurrrent, we need to lock the objects when performing operations around them
-        private readonly Dictionary<AttributeClassification, object> _lockObjects = new Dictionary<AttributeClassification, object>
+        public object TraceId { get; private set; }
+        public object SpanId { get; private set; }
+
+        public string DisplayName => $"{TraceId}.{SpanId}";
+
+
+        public SpanEventWireModel() : base(AttributeDestinations.SpanEvent)
         {
-            { AttributeClassification.AgentAttributes, new object() },
-            { AttributeClassification.Intrinsics, new object() },
-            { AttributeClassification.UserAttributes, new object() }
-        };
-
-        private readonly Span _span;
-        public Span Span => _span;
-
-        public SpanAttributeValueCollection() : base(AttributeDestinations.SpanEvent)
-        {
-            _span = new Span();
-        }
-
-        protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
-        {
-            return GetAttribValuesInternal(classification).Values;
-        }
-
-        protected override bool SetValueImpl(IAttributeValue value)
-        {
-            var attribVal = value is AttributeValue
-                        ? (AttributeValue)value
-                        : new AttributeValue(value);
-
-            return SetValueInternal(attribVal);
         }
 
         protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
         {
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.Value = value;
-
-            return SetValueInternal(attribVal);
-        }
-
-        protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
-        {
-            var attribVal = new AttributeValue(attribDef);
-            attribVal.LazyValue = lazyValue;
-
-            return SetValueInternal(attribVal);
-        }
-
-        protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
-        {
-            foreach (var lockObjKVP in _lockObjects)
-            {
-                var keysToRemoveForClassification = itemsToRemove
-                    .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
-                    .Select(x => x.AttributeDefinition.Name)
-                    .ToArray();
-
-                if (keysToRemoveForClassification.Length == 0)
-                {
-                    continue;
-                }
-
-                var dicForClassification = GetAttribValuesInternal(lockObjKVP.Key);
-
-                lock (lockObjKVP.Value)
-                {
-                    foreach (var keyToRemove in keysToRemoveForClassification)
-                    {
-                        dicForClassification.Remove(keyToRemove);
-                    }
-                }
-            }
-
-        }
-
-        private bool SetValueInternal(AttributeValue attribVal)
-        {
-            //These values are used to create a DisplayName on the Streamable Object
-            switch (attribVal.AttributeDefinition.Name)
+            switch (attribDef.Name)
             {
                 case AttributeDefinition.KeyName_TraceId:
-                    Span.TraceId = attribVal.StringValue;
+                    TraceId = value;
                     break;
 
                 case AttributeDefinition.KeyName_Guid:
-                    Span.SpanId = attribVal.StringValue;
+                    SpanId = value;
                     break;
             }
 
-            var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification);
-
-            if (dic == null)
-            {
-                return false;
-            }
-
-            var lockObj = _lockObjects[attribVal.AttributeDefinition.Classification];
-
-            lock (lockObj)
-            {
-                var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
-
-                dic[attribVal.AttributeDefinition.Name] = attribVal;
-
-                return !hasItem;
-            }
+            return base.SetValueImpl(attribDef, value);
         }
 
-        private MapField<string, AttributeValue> GetAttribValuesInternal(AttributeClassification classification)
+        protected override bool SetValueImpl(IAttributeValue attribVal)
         {
-            switch (classification)
+            switch (attribVal.AttributeDefinition.Name)
             {
-                case AttributeClassification.AgentAttributes:
-                    return _span.AgentAttributes;
-                case AttributeClassification.UserAttributes:
-                    return _span.UserAttributes;
-                case AttributeClassification.Intrinsics:
-                    return _span.Intrinsics;
-                default:
-                    return null;
+                case AttributeDefinition.KeyName_TraceId:
+                    TraceId = attribVal.Value;
+                    break;
+
+                case AttributeDefinition.KeyName_Guid:
+                    SpanId = attribVal.Value;
+                    break;
             }
+
+            return base.SetValueImpl(attribVal);
         }
+
+
+
+        
     }
+
+    //[JsonConverter(typeof(EventWireModelSerializer))]
+    //public class SpanAttributeValueCollection : AttributeValueCollection, IHasPriority
+    //{
+    //    public float Priority { get; set; }
+    //}
+
+    //public class SpanAttributeValueCollection : AttributeValueCollectionBase<AttributeValue>, ISpanEventWireModel
+    //{
+    //    public float Priority { get; set; }
+
+    //    //Since the Map Field may not be concurrrent, we need to lock the objects when performing operations around them
+    //    private readonly Dictionary<AttributeClassification, object> _lockObjects = new Dictionary<AttributeClassification, object>
+    //    {
+    //        { AttributeClassification.AgentAttributes, new object() },
+    //        { AttributeClassification.Intrinsics, new object() },
+    //        { AttributeClassification.UserAttributes, new object() }
+    //    };
+
+    //    private readonly Span _span;
+    //    public Span Span => _span;
+
+    //    public SpanAttributeValueCollection() : base(AttributeDestinations.SpanEvent)
+    //    {
+    //        _span = new Span();
+    //    }
+
+    //    protected override IEnumerable<AttributeValue> GetAttribValuesImpl(AttributeClassification classification)
+    //    {
+    //        return GetAttribValuesInternal(classification).Values;
+    //    }
+
+    //    protected override bool SetValueImpl(IAttributeValue value)
+    //    {
+    //        var attribVal = value is AttributeValue
+    //                    ? (AttributeValue)value
+    //                    : new AttributeValue(value);
+
+    //        return SetValueInternal(attribVal);
+    //    }
+
+    //    protected override bool SetValueImpl(AttributeDefinition attribDef, object value)
+    //    {
+    //        var attribVal = new AttributeValue(attribDef);
+    //        attribVal.Value = value;
+
+    //        return SetValueInternal(attribVal);
+    //    }
+
+    //    protected override bool SetValueImpl(AttributeDefinition attribDef, Lazy<object> lazyValue)
+    //    {
+    //        var attribVal = new AttributeValue(attribDef);
+    //        attribVal.LazyValue = lazyValue;
+
+    //        return SetValueInternal(attribVal);
+    //    }
+
+    //    protected override void RemoveItemsImpl(IEnumerable<AttributeValue> itemsToRemove)
+    //    {
+    //        foreach (var lockObjKVP in _lockObjects)
+    //        {
+    //            var keysToRemoveForClassification = itemsToRemove
+    //                .Where(x => x.AttributeDefinition.Classification == lockObjKVP.Key)
+    //                .Select(x => x.AttributeDefinition.Name)
+    //                .ToArray();
+
+    //            if (keysToRemoveForClassification.Length == 0)
+    //            {
+    //                continue;
+    //            }
+
+    //            var dicForClassification = GetAttribValuesInternal(lockObjKVP.Key);
+
+    //            lock (lockObjKVP.Value)
+    //            {
+    //                foreach (var keyToRemove in keysToRemoveForClassification)
+    //                {
+    //                    dicForClassification.Remove(keyToRemove);
+    //                }
+    //            }
+    //        }
+
+    //    }
+
+    //    private bool SetValueInternal(AttributeValue attribVal)
+    //    {
+    //        //These values are used to create a DisplayName on the Streamable Object
+    //        switch (attribVal.AttributeDefinition.Name)
+    //        {
+    //            case AttributeDefinition.KeyName_TraceId:
+    //                Span.TraceId = attribVal.StringValue;
+    //                break;
+
+    //            case AttributeDefinition.KeyName_Guid:
+    //                Span.SpanId = attribVal.StringValue;
+    //                break;
+    //        }
+
+    //        var dic = GetAttribValuesInternal(attribVal.AttributeDefinition.Classification);
+
+    //        if (dic == null)
+    //        {
+    //            return false;
+    //        }
+
+    //        var lockObj = _lockObjects[attribVal.AttributeDefinition.Classification];
+
+    //        lock (lockObj)
+    //        {
+    //            var hasItem = dic.ContainsKey(attribVal.AttributeDefinition.Name);
+
+    //            dic[attribVal.AttributeDefinition.Name] = attribVal;
+
+    //            return !hasItem;
+    //        }
+    //    }
+
+    //    private MapField<string, AttributeValue> GetAttribValuesInternal(AttributeClassification classification)
+    //    {
+    //        switch (classification)
+    //        {
+    //            case AttributeClassification.AgentAttributes:
+    //                return _span.AgentAttributes;
+    //            case AttributeClassification.UserAttributes:
+    //                return _span.UserAttributes;
+    //            case AttributeClassification.Intrinsics:
+    //                return _span.Intrinsics;
+    //            default:
+    //                return null;
+    //        }
+    //    }
+    //}
 }
