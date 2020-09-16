@@ -9,6 +9,7 @@ Param(
     [ValidateSet("All","x64","x86")][string]$Architecture = "All",
     [string]$HomePath = "$env:NR_DEV_HOMEROOT",
     [string]$gpgKeyPath = "",
+    [string]$MyGetApiKey = "",
     [switch]$SkipProfilerBuild = $false,
     [switch]$KeepNewRelicConfig = $false,
     [switch]$SetSystemEnvironment = $false,
@@ -126,7 +127,12 @@ if (!($gpgKeyPath -eq "")) {
 # Create Build Artifacts #
 ##########################
 
-& "$rootDirectory\build\package.ps1" -configuration $Configuration -IncludeDownloadSite
+if ($MyGetApiKey -eq "") {
+    & "$rootDirectory\build\package.ps1" -configuration $Configuration -IncludeDownloadSite
+} else {
+    & "$rootDirectory\build\package.ps1" -configuration $Configuration -IncludeDownloadSite -MyGetApiKey $MyGetApiKey
+}
+
 if ($LastExitCode -ne 0) {
     Write-Host "Error building packages. Exiting with code: $LastExitCode.."
     exit $LastExitCode

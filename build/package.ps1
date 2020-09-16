@@ -6,10 +6,13 @@
 Param(
   [Parameter(Mandatory=$True)]
   [string]$configuration,
+  [string]$MyGetApiKey = "",
   [switch]$IncludeDownloadSite
 )
 
 $rootDirectory = Resolve-Path "$(Split-Path -Parent $PSCommandPath)\.."
+$nugetPath = (Resolve-Path "$rootDirectory\build\Tools\nuget.exe").Path
+
 & "$rootDirectory\build\generateBuildProperties.ps1" -outputPath "$rootDirectory\build\BuildArtifacts\_buildProperties"
 $artifactBuilderCsproj = "$rootDirectory\build\ArtifactBuilder\ArtifactBuilder.csproj"
 
@@ -41,4 +44,9 @@ foreach ($pkg in $packagesToBuild) {
 if ($IncludeDownloadSite) {
     #The download site should be built after the other artifacts are built, because it depends on the other artifacts
     dotnet run --project "$artifactBuilderCsproj" DownloadSite $configuration
+}
+
+if ($MyGetApiKey -ne "") {
+    # Currently the only packages that are pushed to MyGet are the AWS Lambda SDK
+    & $nugetPath push $rootDirectory\build\BuildArtifacts\NugetAwsLambdaOpenTracer\*.nupkg -ApiKey $MyGetApiKey -Source "https://www.myget.org/F/newrelic/api/v3/index.json"
 }
