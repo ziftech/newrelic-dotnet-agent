@@ -98,20 +98,20 @@ namespace NewRelic.Agent.IntegrationTests
         };
 
         private readonly List<Assertions.ExpectedMetric> _ioBoundNoSpecialAsyncMetrics = new List<Assertions.ExpectedMetric> {
-            new Assertions.ExpectedMetric { metricName = @"Apdex/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync"},
-            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Apdex/MVC/AsyncAwaitTest/IoBoundNoSpecial"},
+            new Assertions.ExpectedMetric { metricName = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"WebTransactionTotalTime/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
 
             new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwaitTestController/IoBoundNoSpecialAsync", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", callCount = 1 },
             new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", callCount = 1 },
 
-            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwaitTestController/IoBoundNoSpecialAsync", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 },
-            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecialAsync", callCount = 1 }
+            new Assertions.ExpectedMetric { metricName = @"DotNet/AsyncAwaitTestController/IoBoundNoSpecialAsync", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"DotNet/Middleware Pipeline", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync1", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync2", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 },
+            new Assertions.ExpectedMetric { metricName = @"Custom/CustomMethodAsync3", metricScope = @"WebTransaction/MVC/AsyncAwaitTest/IoBoundNoSpecial", callCount = 1 }
         };
 
         private readonly List<Assertions.ExpectedMetric> _customMiddlewareIoBoundNoSpecialAsyncMetrics = new List<Assertions.ExpectedMetric> {

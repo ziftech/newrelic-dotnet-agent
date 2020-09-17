@@ -11,13 +11,15 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class AspNetCoreReJitMvcApplicationFixture : RejitMvcApplicationFixture
     {
+        const string TargetFramework = "net5.0";
+
         public AspNetCoreReJitMvcApplicationFixture() :
             this(useTieredCompilation: false)
         {
         }
 
         protected AspNetCoreReJitMvcApplicationFixture(bool useTieredCompilation)
-            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", ApplicationType.Bounded, true, true, true))
+            : base(new RemoteService("AspNetCoreMvcRejitApplication", "AspNetCoreMvcRejitApplication.exe", TargetFramework, ApplicationType.Bounded, true, true, true))
         {
             RemoteApplication.UseTieredCompilation = useTieredCompilation;
         }

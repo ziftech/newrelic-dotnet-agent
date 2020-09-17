@@ -11,31 +11,31 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const string ApplicationDirectoryName = @"AspNetCoreMvcAsyncApplication";
         private const string ExecutableName = @"AspNetCoreMvcAsyncApplication.exe";
 
-        public AspNetCoreMvcAsyncTestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true, true))
+        public AspNetCoreMvcAsyncTestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net5.0", ApplicationType.Bounded, true, true, true))
         {
         }
 
         public void GetIoBoundNoSpecialAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundNoSpecialAsync";
+            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundNoSpecial";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCustomMiddlewareIoBoundNoSpecialAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/CustomMiddlewareIoBoundNoSpecialAsync";
+            var address = $"http://localhost:{Port}/AsyncAwaitTest/CustomMiddlewareIoBoundNoSpecial";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetIoBoundConfigureAwaitFalseAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundConfigureAwaitFalseAsync";
+            var address = $"http://localhost:{Port}/AsyncAwaitTest/IoBoundConfigureAwaitFalse";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 
         public void GetCpuBoundTasksAsync()
         {
-            var address = $"http://localhost:{Port}/AsyncAwaitTest/CpuBoundTasksAsync";
+            var address = $"http://localhost:{Port}/AsyncAwaitTest/CpuBoundTasks";
             DownloadStringAndAssertEqual(address, "Worked");
         }
 

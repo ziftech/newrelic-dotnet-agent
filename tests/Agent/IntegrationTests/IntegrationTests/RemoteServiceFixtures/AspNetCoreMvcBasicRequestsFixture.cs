@@ -12,7 +12,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
     {
         private const string ApplicationDirectoryName = @"AspNetCoreMvcBasicRequestsApplication";
         private const string ExecutableName = @"AspNetCoreMvcBasicRequestsApplication.exe";
-        public AspNetCoreMvcBasicRequestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true, true))
+        public AspNetCoreMvcBasicRequestsFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName,"net5.0", ApplicationType.Bounded, true, true, true))
         {
         }
 

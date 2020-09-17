@@ -8,7 +8,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
 {
     public class AspNetCoreMvcWithCollectorFixture : MockNewRelicFixture
     {
-        public AspNetCoreMvcWithCollectorFixture() : base(new RemoteService("AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.exe", ApplicationType.Bounded, true, true, true))
+        public AspNetCoreMvcWithCollectorFixture() : base(new RemoteService("AspNetCoreMvcBasicRequestsApplication", "AspNetCoreMvcBasicRequestsApplication.exe", "net5.0", ApplicationType.Bounded, true, true, true))
         {
         }
 

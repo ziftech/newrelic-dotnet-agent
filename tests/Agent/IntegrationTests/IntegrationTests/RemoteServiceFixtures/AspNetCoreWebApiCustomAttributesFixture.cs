@@ -13,7 +13,7 @@ namespace NewRelic.Agent.IntegrationTests.RemoteServiceFixtures
         private const string ApplicationDirectoryName = "AspNetCoreWebApiCustomAttributesApplication";
         private const string ExecutableName = "AspNetCoreWebApiCustomAttributesApplication.exe";
 
-        public AspNetCoreWebApiCustomAttributesFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Bounded, true, true, true))
+        public AspNetCoreWebApiCustomAttributesFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, "net5.0", ApplicationType.Bounded, true, true, true))
         {
         }
 

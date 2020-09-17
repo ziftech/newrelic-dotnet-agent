@@ -26,7 +26,7 @@ namespace AspNetCoreMvcRejitApplication
         {
             var commandLine = string.Join(" ", args);
 
-            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath) + ".exe";
+            _applicationName = Path.GetFileNameWithoutExtension(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath) + ".exe";
 
             Console.WriteLine($"[{_applicationName}] Joined args: {commandLine}");
 
