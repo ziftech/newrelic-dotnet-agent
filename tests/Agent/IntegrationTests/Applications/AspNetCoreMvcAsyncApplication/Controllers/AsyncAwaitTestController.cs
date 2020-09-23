@@ -10,7 +10,7 @@ namespace AspNetCoreMvcAsyncApplication.Controllers
 {
     public class AsyncAwaitTestController : Controller
     {
-        public async Task<string> IoBoundNoSpecialAsync()
+        public async Task<string> IoBoundNoSpecial()
         {
             var async1 = CustomMethodAsync1();
             var async2 = CustomMethodAsync2();
@@ -22,19 +22,19 @@ namespace AspNetCoreMvcAsyncApplication.Controllers
             return "Worked";
         }
 
-        public async Task<string> CustomMiddlewareIoBoundNoSpecialAsync()
+        public async Task<string> CustomMiddlewareIoBoundNoSpecial()
         {
             return await Task.FromResult("Worked");
         }
 
-        public async Task<string> IoBoundConfigureAwaitFalseAsync()
+        public async Task<string> IoBoundConfigureAwaitFalse()
         {
             await ConfigureAwaitFalseExampleAsync();
 
             return "Worked";
         }
 
-        public async Task<string> CpuBoundTasksAsync()
+        public async Task<string> CpuBoundTasks()
         {
             await Task.Run(() => TaskRunBackgroundMethod());
             await Task.Factory.StartNew(TaskFactoryStartNewBackgroundMethod);
