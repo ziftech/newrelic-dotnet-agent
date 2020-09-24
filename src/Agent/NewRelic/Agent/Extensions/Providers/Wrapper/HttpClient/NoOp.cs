@@ -1,3 +1,4 @@
+
 // Copyright 2020 New Relic, Inc. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -13,13 +14,16 @@ using NewRelic.SystemExtensions;
 
 namespace NewRelic.Providers.Wrapper.HttpClient
 {
-    public class SendAsyncNoOp : IWrapper
+    public class NoOp : IWrapper
     {
         public bool IsTransactionRequired => true;
 
         private const string AssemblyName = "System.Net.Http";
         private const string HttpClientTypeName = "System.Net.Http.HttpClient";
+        private const string SocketsHttpHandlerTypeName = "System.Net.Http.SocketsHttpHandler";
         private const string SendAsyncMethodName = "SendAsync";
+        private const string SendMethodName = "Send";
+        private const int DotNet5AssemblyVersionMajor = 5;
 
         public CanWrapResponse CanWrap(InstrumentedMethodInfo methodInfo)
         {
@@ -27,14 +31,20 @@ namespace NewRelic.Providers.Wrapper.HttpClient
 
             var version = method.Type.Assembly.GetName().Version;
 
-            if (version.Major > 4 && method.MatchesAny(assemblyName: AssemblyName, typeName: HttpClientTypeName, methodName: SendAsyncMethodName))
+            if (version.Major >= DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: HttpClientTypeName, methodName: SendAsyncMethodName))
             {
                 return new CanWrapResponse(true);
             }
-            else
+            else if (version.Major < DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendAsyncMethodName))
             {
-                return new CanWrapResponse(false);
+                return new CanWrapResponse(true);
             }
+            else if (version.Major < DotNet5AssemblyVersionMajor && method.MatchesAny(assemblyName: AssemblyName, typeName: SocketsHttpHandlerTypeName, methodName: SendMethodName))
+            {
+                return new CanWrapResponse(true);
+            }
+
+            return new CanWrapResponse(false);
         }
 
         public AfterWrappedMethodDelegate BeforeWrappedMethod(InstrumentedMethodCall instrumentedMethodCall, IAgent agent, ITransaction transaction)
