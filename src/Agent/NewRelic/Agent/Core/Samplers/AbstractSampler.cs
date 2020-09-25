@@ -26,6 +26,7 @@ namespace NewRelic.Agent.Core.Samplers
         {
             _scheduler = scheduler;
             _frequency = frequency;
+            _subscriptions.Add<AgentConnectedEvent>(OnAgentConnected);
         }
 
         public abstract void Sample();
@@ -37,6 +38,12 @@ namespace NewRelic.Agent.Core.Samplers
         }
 
         protected override void OnConfigurationUpdated(ConfigurationUpdateSource configurationUpdateSource)
+        {
+            //Stop();
+            //Start();
+        }
+
+        protected void OnAgentConnected(AgentConnectedEvent _)
         {
             Stop();
             Start();
