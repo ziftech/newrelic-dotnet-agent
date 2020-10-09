@@ -45,6 +45,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicMvcCoreApplication", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NServiceBusReceiverHost", "UnboundedApplications\NServiceBusReceiverHost\NServiceBusReceiverHost.csproj", "{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitMqBasicMvcCoreApplication", "UnboundedApplications\RabbitMqBasicMvcCoreApplication\RabbitMqBasicMvcCoreApplication.csproj", "{026B484F-7FA3-4474-A0B3-69D05F60E52B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -123,6 +125,10 @@ Global
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{026B484F-7FA3-4474-A0B3-69D05F60E52B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{026B484F-7FA3-4474-A0B3-69D05F60E52B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{026B484F-7FA3-4474-A0B3-69D05F60E52B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{026B484F-7FA3-4474-A0B3-69D05F60E52B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,9 +146,10 @@ Global
 		{DDEF44D7-7758-408F-9406-AF98531462F3} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{26AEFF66-DFF2-4C85-AB0C-0B2672E8A434} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 		{F4F32DD5-910F-4AC7-85CE-17C72A4847C9} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
+		{026B484F-7FA3-4474-A0B3-69D05F60E52B} = {03BAC949-FAD7-4EE6-A2BD-45E3DE2407F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 		SolutionGuid = {656848E2-BFD2-4092-9328-C6CDF39B1274}
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.Common.6.0.1304.0\lib\NET45;packages\EnterpriseLibrary.Data.6.0.1304.0\lib\NET45
 	EndGlobalSection
 EndGlobal
