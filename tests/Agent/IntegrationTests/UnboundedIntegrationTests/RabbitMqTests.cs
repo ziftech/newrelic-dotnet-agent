@@ -29,6 +29,7 @@ namespace NewRelic.Agent.UnboundedIntegrationTests
                 {
                     var configModifier = new NewRelicConfigModifier(fixture.DestinationNewRelicConfigFilePath);
                     configModifier.ForceTransactionTraces();
+                    configModifier.SetLogLevel("finest");
                 },
                 exerciseApplication: () =>
                 {

@@ -17,9 +17,10 @@ namespace NewRelic.Agent.UnboundedIntegrationTests.RemoteServiceFixtures
 
         private const string ApplicationDirectoryName = @"RabbitMqBasicMvcCoreApplication";
         private const string ExecutableName = "RabbitMqBasicMvcCoreApplication.exe";
+        private const string TargetFramework = "netcoreapp3.1";
 
 
-        public RabbitMqBasicMvcFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, ApplicationType.Unbounded, isCoreApp: true, publishApp: true))
+        public RabbitMqBasicMvcFixture() : base(new RemoteService(ApplicationDirectoryName, ExecutableName, TargetFramework, ApplicationType.Unbounded, isCoreApp: true, publishApp: true))
         {
 
         }
