@@ -55,9 +55,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     tcpClient.Close();
                     return false;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     //There was nothing to connect to so the port is available.
+                    Console.WriteLine($"IsPortAvailable exception: {ex}, returning true");
                     return true;
                 }
             }
