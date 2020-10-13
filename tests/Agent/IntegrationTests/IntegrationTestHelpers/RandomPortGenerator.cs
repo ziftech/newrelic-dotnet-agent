@@ -35,6 +35,10 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 {
                     return potentialPort;
                 }
+                else
+                {
+                    Console.WriteLine($"IsPortAvailable FALSE: port: {potentialPort}, attempt count: {countAttempts}");
+                }
             }
 
             throw new Exception($"Unable to obtain port after {maxAttempts} attempts.");
@@ -58,8 +62,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 catch (Exception ex)
                 {
                     //There was nothing to connect to so the port is available.
-                    Console.WriteLine($"IsPortAvailable exception: {ex}, returning true");
-                    return true;
+                     return true;
                 }
             }
         }
