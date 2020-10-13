@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -240,6 +241,13 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
             RemoteProcess = new Process();
             RemoteProcess.StartInfo = startInfo;
+
+            // check the port again to see if it's been engaged by something else since last checked for availability
+            if (!IsPortAvailable(Port))
+            {
+                Console.WriteLine($"About to Start process but Port: {Port} is no longer available!");
+            }
+
             RemoteProcess.Start();
 
             if (RemoteProcess == null)
@@ -259,6 +267,25 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             }
 
             WaitForAppServerToStartListening(RemoteProcess, captureStandardOutput);
+        }
+
+        private static bool IsPortAvailable(int potentialPort)
+        {
+
+            using (var tcpClient = new TcpClient())
+            {
+                try
+                {
+                    tcpClient.Connect("localhost", potentialPort);
+                    tcpClient.Close();
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    //There was nothing to connect to so the port is available.
+                    return true;
+                }
+            }
         }
 
         protected virtual void WaitForAppServerToStartListening(Process process, bool captureStandardOutput)
