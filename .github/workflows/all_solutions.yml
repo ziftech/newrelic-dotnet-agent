@@ -443,12 +443,11 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        # namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
-        #   CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
-        #   HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
-        #   ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
-        #   WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
-        namespace: [ Owin, CatInbound, DistributedTracing, Logging ]
+        namespace: [ AgentFeatures, AgentMetrics, Api, AspNetCore, BasicInstrumentation, CatInbound, CatOutbound, 
+          CSP, CustomAttributes, CustomInstrumentation, DataTransmission, DistributedTracing, Errors, 
+          HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
+          ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
+          WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
@@ -490,13 +489,13 @@ jobs:
         run: |
           Write-Host "List ports in use"
           netstat -no
-          
+
           Write-Host "Run tests"
           ${{ env.xunit_console }} ${{ env.integration_tests_dll }} -namespace NewRelic.Agent.IntegrationTests.${{ matrix.namespace }} -xml ${{ github.workspace }}/TestResults/${{ matrix.namespace }}_testResults.xml
           
           Write-Host "Get HostableWebCore errors (if any)"
           Get-EventLog -LogName Application -Source HostableWebCore
-       shell: powershell
+        shell: powershell
 
       - name: Archive Test Results
         if: ${{ always() }}
@@ -505,3 +504,32 @@ jobs:
           name: integration-test-results-${{ matrix.namespace }}-${{ github.run_id }}
           path: ${{ github.workspace }}/TestResults
           if-no-files-found: error
+
+  combine-integration-test-results:
+    needs: run-integration-tests
+    if: ${{ always() }}
+    name: Combine Integration Test Results
+
+    runs-on: windows-2019
+
+    env:
+      results_name: ""
+
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Combine Integration Results
+        run: |
+          mkdir all-integration-test-results
+
+          Get-ChildItem -Path .\integration-test-results* -Include *.xml -Recurse | ForEach-Object { cp $_.FullName .\all-integration-test-results }
+        shell: powershell
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-integration-test-results-${{ github.run_id }}
+          path: ./all-integration-test-results
+          if-no-files-found: error
+
