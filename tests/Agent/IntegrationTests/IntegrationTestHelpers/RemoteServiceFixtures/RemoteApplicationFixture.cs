@@ -223,6 +223,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
                         RemoteApplication.Start(CommandLineArguments, captureStandardOutput);
 
+                        Thread.Sleep(10000);
+
                         try
                         {
                             ExerciseApplication();
