@@ -448,7 +448,7 @@ jobs:
           # HttpClientInstrumentation.NetCore, HttpClientInstrumentation.NetFramework, Logging, Owin, ReJit.NetCore, 
           # ReJit.NetFramework, RemoteServiceFixtures, RestSharp, WCF.Client.IIS.ASPDisabled, WCF.Client.IIS.ASPEnabled, 
           # WCF.Client.Self, WCF.Service.IIS.ASPDisabled, WCF.Service.IIS.ASPEnabled, WCF.Service.Self ]
-        namespace: [ CatInbound, DistributedTracing, Logging, Owin, RestSharp ]
+          namespace: [ CatInbound, DistributedTracing, Logging, Owin, RestSharp ]
       fail-fast: false # we don't want one test failure in one namespace to kill the other runs
 
     env:
