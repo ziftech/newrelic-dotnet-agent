@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -47,19 +48,33 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         private static bool IsPortAvailable(int potentialPort)
         {
 
-            using (var tcpClient = new TcpClient())
+            //using (var tcpClient = new TcpClient())
+            //{
+            //    try
+            //    {
+            //        tcpclient.connect("localhost", potentialport);
+            //        tcpclient.close();
+            //        return false;
+            //    }
+            //    catch (exception)
+            //    {
+            //        //there was nothing to connect to so the port is available.
+            //        return true;
+            //    }
+            //}
+
+            try
             {
-                try
-                {
-                    tcpClient.Connect("localhost", potentialPort);
-                    tcpClient.Close();
-                    return false;
-                }
-                catch (Exception)
-                {
-                    //There was nothing to connect to so the port is available.
-                    return true;
-                }
+                var ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
+                var tcpListener = new TcpListener(ipAddress, potentialPort);
+                tcpListener.Start();
+                tcpListener.Stop();
+                return true;
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"Caught exception attempting to listen to port {potentialPort}: " + ex);
+                return false;
             }
         }
 
