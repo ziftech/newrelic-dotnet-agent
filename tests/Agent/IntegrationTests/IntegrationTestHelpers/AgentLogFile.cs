@@ -44,7 +44,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             } while (timeTaken.Elapsed < timeout);
 
-            throw new Exception("No agent log file found.");
+            throw new Exception($"No agent log file found. logDirPath: {logDirectoryPath}, logFileName: {fileName}");
         }
 
         public override IEnumerable<string> GetFileLines()
