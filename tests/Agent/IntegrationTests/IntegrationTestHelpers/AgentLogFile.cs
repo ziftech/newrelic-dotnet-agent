@@ -19,6 +19,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
         public AgentLogFile(string logDirectoryPath, string fileName, TimeSpan? timeoutOrZero = null)
         {
+            Console.WriteLine($"AgentLogFile ctor, filename param: {fileName}, logDirectoryPath: {logDirectoryPath}");
             Contract.Assert(logDirectoryPath != null);
 
             _fileName = fileName;
@@ -28,6 +29,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var timeTaken = Stopwatch.StartNew();
 
             var searchPattern = _fileName != string.Empty ? _fileName : "newrelic_agent_*.log";
+            Console.WriteLine($"AgentLogFile ctor, searchPattern: {searchPattern}");
 
             do
             {
@@ -35,6 +37,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     .Where(file => file != null && !file.Contains("audit"))
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .FirstOrDefault();
+                Console.WriteLine($"AgentLogFile ctor, mostRecentlyUpdatedFile: {mostRecentlyUpdatedFile}");
+
                 if (mostRecentlyUpdatedFile != null)
                 {
                     _filePath = mostRecentlyUpdatedFile;

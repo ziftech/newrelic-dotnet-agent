@@ -657,14 +657,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
 
             var navigator = document.CreateNavigator();
 
-            var filename = GetAttributeValue(navigator, "urn:newrelic-config", new[] { "configuration", "log" }, "fileName");
-
-            if (string.IsNullOrEmpty(filename))
-            {
-                Console.WriteLine("AGENT LOG FILE NAME is null or empty! Test will fail.");
-            }
-
-            return filename;
+            return GetAttributeValue(navigator, "urn:newrelic-config", new[] { "configuration", "log" }, "fileName");
         }
 
         public static string GetAgentLogFileDirectoryPath(string newRelicConfigurationFilePath)
