@@ -12,6 +12,7 @@ env:
   tools_path: ${{ github.workspace }}\build\Tools
   DOTNET_NOLOGO: true
   #<other env vars here>
+  NR_DOTNET_TEST_SAVE_WORKING_DIRECTORY: 1
 
 jobs:
 

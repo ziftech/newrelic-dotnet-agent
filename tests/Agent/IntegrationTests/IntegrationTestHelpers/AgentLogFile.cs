@@ -25,6 +25,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             _fileName = fileName;
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
+            Console.WriteLine($"AgentLogFile ctor, timeout: {timeout}");
 
             var timeTaken = Stopwatch.StartNew();
 
@@ -46,6 +47,9 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
+
+                Console.WriteLine($"AgentLogFile ctor, elapsed time: {timeTaken.Elapsed}, timeout: {timeout}");
+
             } while (timeTaken.Elapsed < timeout);
 
             throw new Exception($"No agent log file found. logDirPath: {logDirectoryPath}, logFileName: {fileName}");
