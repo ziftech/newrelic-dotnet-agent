@@ -52,6 +52,15 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
         [Trait("feature", "CAT-DistributedTracing")]
         public void Test()
         {
+            if (_fixture.AgentLog == null)
+            {
+                System.Console.WriteLine($"CatEnabledHeaderPresentDistributedTraceSettingFalse.Test _fixture.AgentLog is NULL, test will fail");
+            }
+            else
+            {
+                System.Console.WriteLine($"CatEnabledHeaderPresentDistributedTraceSettingFalse.Test _fixture.AgentLog: {_fixture.AgentLog._filePath}");
+            }
+
             var catResponseHeader = _responseHeaders.GetValues(@"X-NewRelic-App-Data")?.FirstOrDefault();
             Assert.NotNull(catResponseHeader);
 

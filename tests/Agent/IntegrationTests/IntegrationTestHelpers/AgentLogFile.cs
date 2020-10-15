@@ -26,7 +26,6 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             _fileName = fileName;
 
             var timeout = timeoutOrZero ?? TimeSpan.Zero;
-            Console.WriteLine($"AgentLogFile ctor, timeout: {timeout}");
 
             var timeTaken = Stopwatch.StartNew();
 
