@@ -20,6 +20,12 @@ namespace NewRelic.Agent.IntegrationTestHelpers
         public AgentLogFile(string logDirectoryPath, string fileName, TimeSpan? timeoutOrZero = null)
         {
             Console.WriteLine($"AgentLogFile ctor, filename param: {fileName}, logDirectoryPath: {logDirectoryPath}");
+
+            if (_filePath != null)
+            {
+                Console.WriteLine($"AgentLogFile ctor, _filepath already set: {_filePath}");
+            }
+
             Contract.Assert(logDirectoryPath != null);
 
             _fileName = fileName;
