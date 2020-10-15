@@ -333,6 +333,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public virtual void Dispose()
         {
+            System.Console.WriteLine($"RemoteApplication.Dispose(); agentlogfile path: {_agentLogFile._filePath}");
             var disposed = false;
             var stopwatch = Stopwatch.StartNew();
             while (!disposed && stopwatch.Elapsed < TimeSpan.FromSeconds(30))
@@ -340,15 +341,19 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                 try
                 {
                     if (!KeepWorkingDirectory)
+                    {
                         try
                         {
                             Directory.Delete(DestinationRootDirectoryPath, true);
+                            System.Console.WriteLine($"RemoteApplication.Dispose(); deleted dir: {DestinationRootDirectoryPath}");
                         }
                         catch (IOException)
                         {
                             Thread.Sleep(1000);
                             Directory.Delete(DestinationRootDirectoryPath, true);
+                            System.Console.WriteLine($"RemoteApplication.Dispose(); IOException. deleted dir: {DestinationRootDirectoryPath}");
                         }
+                    }
                     disposed = true;
                 }
                 catch (UnauthorizedAccessException)
