@@ -280,7 +280,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
                     tcpClient.Close();
                     return false;
                 }
-                catch (Exception ex)
+                catch
                 {
                     //There was nothing to connect to so the port is available.
                     return true;

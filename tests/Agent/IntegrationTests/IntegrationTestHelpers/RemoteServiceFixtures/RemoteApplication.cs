@@ -201,11 +201,33 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public string DestinationNewRelicExtensionsDirectoryPath { get { return Path.Combine(DestinationNewRelicHomeDirectoryPath, "extensions"); } }
 
+        private AgentLogFile _agentLogFile;
+
         public AgentLogFile AgentLog
         {
             get
             {
-                return new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect);
+                if (_agentLogFile == null)
+                {
+                    Console.WriteLine($"RemoteApplication.AgentLog _agentLogFile is null");
+                    var agentLogFile = new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect);
+                    if (string.IsNullOrEmpty(agentLogFile._filePath))
+                    {
+                        Console.WriteLine($"RemoteApplication.AgentLog _agentLogFile._filePath is null or empty");
+
+                        return agentLogFile;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"RemoteApplication.AgentLog agentLogFile._filePath: {agentLogFile._filePath}");
+
+                        _agentLogFile = agentLogFile;
+                    }
+                }
+
+                return _agentLogFile;
+                //return _agentLogFile != null ? _agentLogFile : new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect);
+                //return new AgentLogFile(DestinationNewRelicLogFileDirectoryPath, AgentLogFileName, Timing.TimeToConnect);
             }
         }
 
