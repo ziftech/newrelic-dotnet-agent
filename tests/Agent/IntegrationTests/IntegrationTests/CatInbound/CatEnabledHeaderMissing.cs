@@ -22,6 +22,8 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
         public CatEnabledHeaderMissing(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
+            System.Console.WriteLine($"start test CatEnabledHeaderMissing");
+
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.Actions
@@ -71,6 +73,9 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
                 () => Assertions.MetricsDoNotExist(Expectations.UnexpectedMetricsCatDisabled, metrics)
             );
+
+            System.Console.WriteLine($"end test CatEnabledHeaderMissing");
+
         }
     }
 }

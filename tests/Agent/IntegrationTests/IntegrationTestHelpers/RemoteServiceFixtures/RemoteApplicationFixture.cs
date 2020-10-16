@@ -37,7 +37,8 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
             get
             {
                 var x = RemoteApplication.AgentLog;
-                Console.WriteLine($"AgentLog hashcode: {x.GetHashCode()}");
+                var y = x.GetHashCode();
+                Console.WriteLine($"AgentLog hashcode: {y}");
                 return x;
             }
         }

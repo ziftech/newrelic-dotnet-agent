@@ -23,6 +23,7 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
         public CatEnabledHeaderPresentDistributedTraceSettingAbsent(RemoteServiceFixtures.BasicMvcApplicationTestFixture fixture, ITestOutputHelper output)
         {
+            System.Console.WriteLine($"start test CatEnabledHeaderPresentDistributedTraceSettingAbsent");
             _fixture = fixture;
             _fixture.TestLogger = output;
             _fixture.Actions
@@ -87,6 +88,9 @@ namespace NewRelic.Agent.IntegrationTests.CatInbound
 
                 () => Assertions.MetricsExist(Expectations.ExpectedMetricsCatEnabled, metrics)
             );
+
+            System.Console.WriteLine($"end test CatEnabledHeaderPresentDistributedTraceSettingAbsent");
+
         }
     }
 }
