@@ -32,7 +32,15 @@ namespace NewRelic.Agent.IntegrationTestHelpers.RemoteServiceFixtures
 
         public string UniqueFolderName { get { return RemoteApplication.UniqueFolderName; } }
 
-        public AgentLogFile AgentLog { get { return RemoteApplication.AgentLog; } }
+        public AgentLogFile AgentLog
+        {
+            get
+            {
+                var x = RemoteApplication.AgentLog;
+                Console.WriteLine($"AgentLog hashcode: {x.GetHashCode()}");
+                return x;
+            }
+        }
 
         public ProfilerLogFile ProfilerLog { get { return RemoteApplication.ProfilerLog; } }
 
