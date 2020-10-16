@@ -30,7 +30,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
             var timeTaken = Stopwatch.StartNew();
 
             var searchPattern = _fileName != string.Empty ? _fileName : "newrelic_agent_*.log";
-            Console.WriteLine($"AgentLogFile ctor, searchPattern: {searchPattern}");
+            Console.WriteLine($"AgentLogFile ctor, searchPattern: {searchPattern}, logDirectoryPath: {logDirectoryPath}");
 
             do
             {
@@ -38,7 +38,7 @@ namespace NewRelic.Agent.IntegrationTestHelpers
                     .Where(file => file != null && !file.Contains("audit"))
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .FirstOrDefault();
-                Console.WriteLine($"AgentLogFile ctor, mostRecentlyUpdatedFile: {mostRecentlyUpdatedFile}");
+                Console.WriteLine($"AgentLogFile ctor, mostRecentlyUpdatedFile: {mostRecentlyUpdatedFile}, logDirectoryPath: {logDirectoryPath}");
 
                 if (mostRecentlyUpdatedFile != null)
                 {
