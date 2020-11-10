@@ -14,11 +14,12 @@ using Xunit.Abstractions;
 namespace NewRelic.Agent.IntegrationTests.Errors
 {
     [NetCoreTest]
-    public class ExpectedErrorTests : IClassFixture<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
+    public class ExpectedErrorTests : NewRelicIntegrationTest<RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture>
     {
         private readonly RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture _fixture;
 
         public ExpectedErrorTests(RemoteServiceFixtures.AspNetCoreMvcBasicRequestsFixture fixture, ITestOutputHelper output)
+            : base(fixture)
         {
             _fixture = fixture;
             _fixture.TestLogger = output;
@@ -62,8 +63,8 @@ namespace NewRelic.Agent.IntegrationTests.Errors
 
             var unexpectedMetrics = new List<Assertions.ExpectedMetric>
             {
-				// error metrics
-				new Assertions.ExpectedMetric {metricName = @"Errors/all"},
+                // error metrics
+                new Assertions.ExpectedMetric {metricName = @"Errors/all"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/allWeb"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/ExpectedErrorTest/ThrowExceptionWithMessage/{exceptionMessage}"},
                 new Assertions.ExpectedMetric {metricName = @"Errors/WebTransaction/MVC/ExpectedErrorTest/ThrowCustomException"},
@@ -77,13 +78,13 @@ namespace NewRelic.Agent.IntegrationTests.Errors
             };
 
             var errorTraces = _fixture.AgentLog.GetErrorTraces().ToList();
-            var errorEvents = _fixture.AgentLog.GetErrorEvents().Select(e => e.Events).SelectMany(e => e).ToList();
+            var errorEvents = _fixture.AgentLog.GetErrorEvents().ToList();
 
             NrAssert.Multiple(
                 () => Assertions.MetricsExist(expectedMetrics, metrics),
                 () => Assertions.MetricsDoNotExist(unexpectedMetrics, metrics),
-                () => Assert.True(errorTraces.Count == 3, $"Expected 3 errors traces but found {errorTraces.Count}"),
-                () => Assert.True(errorEvents.Count == 3, $"Expected 3 errors events but found {errorEvents.Count}")
+                () => Assert.True(errorTraces.Count == 3, $"Expected 3 error traces but found {errorTraces.Count}"),
+                () => Assert.True(errorEvents.Count == 3, $"Expected 3 error events but found {errorEvents.Count}")
             );
 
             foreach(var errorEvent in errorEvents)
