@@ -41,8 +41,9 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1
-
+        uses: microsoft/setup-msbuild@v1.0.2
+        with:
+            vs-version: '[16.7,16.8)'
       - name: Clean out _profilerBuild directory
         run: |
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\*.*" -Force -ErrorAction SilentlyContinue
