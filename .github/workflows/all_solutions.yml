@@ -38,15 +38,10 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Setup .NET Core 2.2.103
-        uses: actions/setup-dotnet@v1
+      - name: Install Nuget 5.8
+        uses: nuget/setup-nuget@v1
         with:
-          dotnet-version: '2.2.103'
-
-      - name: Setup .NET Core 3.1.100
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.100'
+          nuget-version: '5.8'
       
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1
