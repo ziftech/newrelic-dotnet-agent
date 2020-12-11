@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Clean out _profilerBuild directory
         run: |
@@ -51,22 +51,16 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\src\Agent\_profilerBuild\linux-release" -Recurse -Force  -ErrorAction SilentlyContinue
         shell: powershell
 
-      - name: Install dependencies
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.profiler_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
-
       - name: Build x64
         run: |
-          Write-Host "MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=x64 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
         
       - name: Build x86
         run: |
-          Write-Host "MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
-          MSBuild.exe -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}"
+          MSBuild.exe -restore -m -p:Platform=Win32 -p:Configuration=Release ${{ env.profiler_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -137,7 +131,7 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v1
 
       - name: Setup VSTest Path
         uses: darenm/Setup-VSTest@v1
@@ -155,23 +149,11 @@ jobs:
         with:
           name: profiler
           path: ${{ github.workspace }}/src/Agent/_profilerBuild/
-      
-      - name: Install dependencies for FullAgent.sln
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.fullagent_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.fullagent_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
-
-      - name: Install dependencies for MsiInstaller.sln
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.msi_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.msi_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
-      
+            
       - name: Build FullAgent.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true ${{ env.fullagent_solution_path }}
         shell: powershell
 
       - name: Create agent_version.txt
@@ -214,28 +196,40 @@ jobs:
             ${{ github.workspace }}\src\Agent\newrelichome_x86_coreclr
           if-no-files-found: error
 
-      - name: Get Code Signing Certificate
+      - name: Convert Code Signing Certificate Into File
+        if: ${{ github.event.release }}
         id: write_cert
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'newrelic_code_sign_cert.pfx'
-          encodedString: ${{ secrets.SIGNING_CERT }}
+        run: |
+          $filePath = '${{ github.workspace }}\newrelic_code_sign_cert.pfx'
+          $bytes = [Convert]::FromBase64String('${{ secrets.SIGNING_CERT }}')
+          [IO.File]::WriteAllBytes($filePath, $bytes)
+          Write-Host "::set-output name=filePath::$filePath"
+        shell: powershell
           
       - name: Install Code Signing Certificate
+        if: ${{ github.event.release }}
         run: |
+          Write-Host "certutil.exe -f -user -p <passphrase> -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot"
           certutil.exe -f -user -p ${{ secrets.CERT_PASSPHRASE }} -importPFX ${{ steps.write_cert.outputs.filePath }} NoRoot
+        shell: powershell
+      
+      - name: Create Self-signed code signing cert  
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        run: |
+          Write-Host "New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)"
+          New-SelfSignedCertificate -DnsName "Self-signed code signing cert" -Type CodeSigning -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(100)
         shell: powershell
 
       - name: Build MsiInstaller.sln x86
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x86 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Build MsiInstaller.sln x64
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:AllowUnsafeBlocks=true -p:Platform=x64 ${{ env.msi_solution_path }}
         shell: powershell
 
       - name: Archive _build Artifacts
@@ -322,18 +316,12 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
-
-      - name: Install dependencies for IntegrationTests.sln
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.integration_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
+        uses: microsoft/setup-msbuild@v1
 
       - name: Build IntegrationTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.integration_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -362,18 +350,12 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
-
-      - name: Install dependencies for UnboundedIntegrationTests.sln
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.unbounded_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
+        uses: microsoft/setup-msbuild@v1
 
       - name: Build UnboundedIntegrationTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release -p:DeployOnBuild=true -p:PublishProfile=LocalDeploy ${{ env.unbounded_solution_path }}
         shell: powershell
 
       - name: Archive Artifacts
@@ -402,18 +384,12 @@ jobs:
           fetch-depth: 0
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.1
-
-      - name: Install dependencies for PlatformTests.sln
-        run: |
-          Write-Host ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source `"https://www.nuget.org/api/v2`"
-          ${{ env.tools_path }}\nuget.exe restore ${{ env.platform_solution_path }} -NoCache -Source "https://www.nuget.org/api/v2"
-        shell: powershell
+        uses: microsoft/setup-msbuild@v1
 
       - name: Build PlatformTests.sln
         run: |
-          Write-Host "MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}"
-          MSBuild.exe -m -p:Configuration=Release ${{ env.platform_solution_path }}
+          Write-Host "MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}"
+          MSBuild.exe -restore -m -p:Configuration=Release ${{ env.platform_solution_path }}
         shell: powershell
 
   run-integration-tests:
@@ -442,6 +418,21 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Setup .NET Core 2.2.103
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.2.103'
+
+      - name: Setup .NET Core 3.1.100
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+
+      - name: Setup .NET 5.0
+        uses: actions/setup-dotnet@v1
+        with:
+            dotnet-version: '5.0.100'
 
       - name: Set up secrets
         env:
@@ -662,12 +653,13 @@ jobs:
           name: agent-version
           path: ${{ github.workspace }}
 
-      - name: Get GPG Key
+      - name: Convert GPG Key Into File
         id: write_gpgkey
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'gpg.tar.bz2'
-          encodedString: ${{ secrets.GPG_KEY }}
+        run: |
+          filePath="/tmp/gpg.tar.bz2"
+          echo "${{ secrets.GPG_KEY }}" | base64 -d > $filePath
+          echo "::set-output name=filePath::$filePath"
+        shell: bash
 
       - name: Copy GPG Key to keys
         run: |
@@ -682,7 +674,7 @@ jobs:
           agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build
+          docker-compose build build_rpm
           docker-compose run -e AGENT_VERSION=$agentVersion -e GPG_KEYS=/keys/gpg.tar.bz2 build_rpm
         shell: bash
       
@@ -730,7 +722,7 @@ jobs:
           agentVersion=$(head -n 1 ${{ github.workspace }}/agent_version.txt)
           agentVersion=${agentVersion/$'\r\n\t'}
           cd ${{ github.workspace }}/build/Linux
-          docker-compose build
+          docker-compose build build_deb
           docker-compose run -e AGENT_VERSION=$agentVersion build_deb
         shell: bash
         
@@ -792,5 +784,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: deploy-artifacts
-          path: ${{ github.workspace }}\build\BuildArtifacts
+          path: |
+            ${{ github.workspace }}\build\BuildArtifacts
+            ${{ github.workspace }}\deploy
           if-no-files-found: error
